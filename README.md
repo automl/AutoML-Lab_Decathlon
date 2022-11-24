@@ -1,2 +1,2 @@
-# AutoML-Lab_Decathlon
+# AutoML Lab Decathlon
 Repository for the AutoML Decathlon submission 
