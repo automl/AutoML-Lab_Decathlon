@@ -1,0 +1,11 @@
+tasks:
+    - cosmic
+    - crypto
+    - deepsea
+    - ecg
+    - ember
+    - fsd50k
+    - navierstokes
+    - ninapro
+    - nottingham
+    - spherical
