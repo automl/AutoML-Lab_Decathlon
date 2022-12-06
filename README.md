@@ -1,5 +1,6 @@
 # AutoML Lab Decathlon
-Repository for the AutoML Decathlon submission 
+Repository for the AutoML Decathlon submission - Team Freiburg-AutoML-Lab
+
 
 ======================================
 
@@ -86,5 +87,4 @@ unzip -l mysubmission.zip
 
 Some of the codes in ingestion/scoring programs and `model.py` were adapted from [past AutoDL competitions](https://github.com/zhengying-liu/autodl_starting_kit_stable).
 
-Team Freiburg-AutoML-Lab
 
