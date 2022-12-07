@@ -5,6 +5,9 @@ It implements 3 compulsory methods ('__init__', 'train' and 'test').
 To create a valid submission, zip model.py and metadata together with other necessary files
 such as tasks_to_run.yaml, Python modules/packages, pre-trained weights, etc. The final zip file
 should not exceed 300MB.
+
+Reference : Resnet - https://pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html
+            Regnet - https://pytorch.org/vision/main/models/generated/torchvision.models.regnet_y_16gf.html
 """
 
 import logging

@@ -1,3 +1,8 @@
+"""
+Reference : https://github.com/davidtvs/pytorch-lr-finder/blob/master/torch_lr_finder/lr_finder.py 
+Implementation of Learning rate finder to find the optimal Learning rate
+"""
+
 import copy
 import os
 import torch

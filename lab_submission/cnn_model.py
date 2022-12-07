@@ -5,6 +5,9 @@ It implements 3 compulsory methods ('__init__', 'train' and 'test').
 To create a valid submission, zip model.py and metadata together with other necessary files
 such as tasks_to_run.yaml, Python modules/packages, pre-trained weights, etc. The final zip file
 should not exceed 300MB.
+
+Reference : Resnet - https://pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html
+            Regnet - https://pytorch.org/vision/main/models/generated/torchvision.models.regnet_y_16gf.html
 """
 
 import logging
@@ -243,7 +246,7 @@ class Model:
         lr_finder = LRFinder(self.model, self.optimizer, lr_critereon, device="cuda")
         lr_finder.range_test(self.trainloader, end_lr=1E-1, num_iter=100)
         min_grad_idx = (np.gradient(np.array(lr_finder.history['loss']))).argmin()
-        lr = lr_finder.history['lr'][min_grad_idx] * 0.9
+        lr = lr_finder.history['lr'][min_grad_idx]
         lr_finder.reset()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
         new_remaining_time_budget = remaining_time_budget - (time.time() - train_start)

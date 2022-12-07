@@ -160,7 +160,6 @@ class Model:
 
           remaining_time_budget: the time budget constraint for the task, which may influence the training procedure.
         """
-        print('Start Training Autosklearn')
         if remaining_time_budget:
             remaining_time_budget = int(remaining_time_budget)
 
@@ -239,11 +238,14 @@ class Model:
         x_test, solutions = merge_batches(self.valloader, (self.task_type == "single-label"))
 
         # get test predictions from the model
-        predictions = self.model.predict(x_test)
-        # If the task is multi-class single label, the output will be in raw labels; we need to convert to ohe for passing back to ingestion
-        if (self.task_type == "single-label"):
+        if self.task_type == "single-label":
             n = self.metadata_.get_output_shape()[0]
-            predictions = np.eye(n)[predictions.astype(int)]
+            solutions = np.eye(n)[solutions.astype(int)]
+            predictions = self.model.predict_proba(x_test)
+        elif self.task_type == "multi-label":
+            predictions = self.model.predict_proba(x_test)
+        else:
+            predictions = self.model.predict(x_test)
 
         test_end = time.time()
         # Update some variables for time management
@@ -280,9 +282,10 @@ class Model:
         # get test predictions from the model
         predictions = self.model.predict(x_test)
         # If the task is multi-class single label, the output will be in raw labels; we need to convert to ohe for passing back to ingestion
-        if (self.task_type == "single-label"):
-            n = self.metadata_.get_output_shape()[0]
-            predictions = np.eye(n)[predictions.astype(int)]
+        if self.task_type == "single-label" or self.task_type == "multi-label":
+            predictions = self.model.predict_proba(x_test)
+        else:
+            predictions = self.model.predict(x_test)
 
         test_end = time.time()
         # Update some variables for time management
@@ -303,7 +306,7 @@ class Model:
     @staticmethod
     def is_applicable(metadata):
         is_applicable = False
-        timeseries, channel, row, col  = metadata.get_tensor_shape()
+        timeseries, channel, row, col = metadata.get_tensor_shape()
         input_shape = metadata.get_tensor_shape()
         spacetime_dims = np.count_nonzero(np.array(input_shape)[[0, 2, 3]] != 1)
         dataset_size = metadata.size()

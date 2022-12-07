@@ -68,13 +68,14 @@ def get_xgb_model(task_type: str, output_size: int, random_state=None):
 
     # Common model params
     model_params = {
-        "learning_rate": 0.03,
-        "n_jobs": -1,
+        "max_depth": 3,
+        "eta": 1,
+        "n_jobs": 10,
         "gpu_id": 0,
-        "n_estimators": 10000,
-        "early_stopping_rounds": 20,
-        "tree_method": "hist",
+        "early_stopping_rounds": 5,
+        "tree_method": "gpu_hist",
         "subsample": 0.9,
+        "sampling_method": "gradient_based",
     }
     if random_state:
         model_params["random_state"] = random_state
@@ -286,11 +287,11 @@ class Model:
         x_test, _ = merge_batches(self.testloader, (self.task_type == "single-label"))
 
         # get test predictions from the model
+        predictions = self.model.predict(x_test)
         # If the task is multi-class single label, the output will be in raw labels; we need to convert to ohe for passing back to ingestion
-        if self.task_type == "single-label" or self.task_type == "multi-label":
-            predictions = self.model.predict_proba(x_test)
-        else:
-            predictions = self.model.predict(x_test)
+        if (self.task_type == "single-label"):
+            n = self.metadata_.get_output_shape()[0]
+            predictions = np.eye(n)[predictions.astype(int)]
 
         test_end = time.time()
         # Update some variables for time management
@@ -329,17 +330,11 @@ class Model:
         x_test, solutions = merge_batches(self.valloader, (self.task_type == "single-label"))
 
         # get test predictions from the model
-
-        # If the task is multi-class single label, the output will be in raw labels; we need to convert to ohe for
-        # passing back to ingestion
-        if self.task_type == "single-label":
+        predictions = self.model.predict(x_test)
+        # If the task is multi-class single label, the output will be in raw labels; we need to convert to ohe for passing back to ingestion
+        if (self.task_type == "single-label"):
             n = self.metadata_.get_output_shape()[0]
-            solutions = np.eye(n)[solutions.astype(int)]
-            predictions = self.model.predict_proba(x_test)
-        elif self.task_type == "multi-label":
-            predictions = self.model.predict_proba(x_test)
-        else:
-            predictions = self.model.predict(x_test)
+            predictions = np.eye(n)[predictions.astype(int)]
 
         return predictions, solutions
 
@@ -354,7 +349,6 @@ class Model:
 
     def __str__(self):
         return 'XGBoost'
-
 
 def get_logger(verbosity_level):
     """Set logging format to something like:

@@ -5,6 +5,8 @@ It implements 3 compulsory methods ('__init__', 'train' and 'test').
 To create a valid submission, zip model.py and metadata together with other necessary files
 such as tasks_to_run.yaml, Python modules/packages, pre-trained weights, etc. The final zip file
 should not exceed 300MB.
+
+Reference : https://github.com/FunctionLab/selene/blob/master/models/deepsea.py
 """
 
 import datetime
@@ -22,8 +24,7 @@ import torchvision.models as models
 # seeding randomness for reproducibility
 from torchvision.models import ResNet18_Weights
 
-from early_stopping import EarlyStopping
-from lr_finder import LRFinder
+from early_stopping_default import EarlyStopping
 
 np.random.seed(42)
 torch.manual_seed(1)
@@ -240,18 +241,7 @@ class Model:
         train_start = time.time()
 
         # Training loop
-        lr_critereon = lambda x, y: self.criterion(x, y.reshape(y.shape[0], -1))
-        lr_finder = LRFinder(self.model, self.optimizer, lr_critereon, device="cuda")
-        success = lr_finder.range_test(self.trainloader, end_lr=5E-2, num_iter=100)
-        if success:
-            min_grad_idx = (np.gradient(np.array(lr_finder.history['loss']))).argmin()
-            lr = lr_finder.history['lr'][min_grad_idx]
-        else:
-            lr = 5E-4
-        lr_finder.reset()
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
-        new_remaining_time_budget = remaining_time_budget - (time.time() - train_start)
-        self.trainloop(self.criterion, self.optimizer, time_limit=new_remaining_time_budget)
+        self.trainloop(self.criterion, self.optimizer, time_limit=remaining_time_budget)
         train_end = time.time()
 
         # Update for time budget managing
@@ -417,7 +407,7 @@ class Model:
         return is_applicable
 
     def __str__(self):
-        return 'Sequential'
+        return 'DeepSea'
 
 def get_logger(verbosity_level):
     """Set logging format to something like:

@@ -5,6 +5,8 @@ It implements 3 compulsory methods ('__init__', 'train' and 'test').
 To create a valid submission, zip model.py and metadata together with other necessary files
 such as tasks_to_run.yaml, Python modules/packages, pre-trained weights, etc. The final zip file
 should not exceed 300MB.
+
+Reference : https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html
 """
 
 import logging
@@ -29,10 +31,11 @@ class SimpleRNN(nn.Module):
     def __init__(self, input_shape, num_classes, use_pretrained=True):
         super(SimpleRNN, self).__init__()
         time_dim, channel, height, width = input_shape
-        hidden_size = channel * 2
-        self.rnn = nn.LSTM(channel, hidden_size, batch_first=True)
-        # flatten
-        self.fc = nn.Linear(hidden_size, num_classes)
+        hidden_size = max(2*channel, 128)
+        self.lstm = nn.LSTM(channel, hidden_size, batch_first=True)
+        self.gru = nn.GRU(channel, hidden_size, batch_first=True)
+        self.rnn = nn.RNN(channel, hidden_size, batch_first=True)
+        self.fc = nn.Linear(hidden_size*3, num_classes)
 
     def forward(self, x):
         if x.shape[3] == 1 and x.shape[4] > 1:
@@ -42,9 +45,11 @@ class SimpleRNN(nn.Module):
         x = torch.squeeze(x)
         if len(x.shape) == 2:
             x = x.reshape(x.shape[0], x.shape[1], 1)
-        _, (hidden, _) = self.rnn(x)
+        _, (hidden_lstm, _) = self.lstm(x)
+        _, hidden_gru = self.gru(x)
+        _, hidden_rnn = self.rnn(x)
 
-        x = self.fc(hidden[-1])
+        x = self.fc(torch.cat((hidden_lstm[-1], hidden_gru[-1], hidden_rnn[-1]), dim=1))
         return x
 
     def disable_gradients(self, model) -> None:
